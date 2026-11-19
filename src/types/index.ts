@@ -2,6 +2,17 @@ export type TransactionMode = 'expense' | 'income' | 'transfer' | 'asset_sale';
 
 export type MoodType = 'Senang' | 'Sedih' | 'Stres' | 'Biasa' | 'Galau' | 'Marah' | 'Suntuk' | 'Cemas';
 
+export type MaritalStatus = 'single' | 'married' | 'married_with_kids';
+
+export interface UserProfile {
+  name: string;
+  maritalStatus: MaritalStatus;
+  isSandwich: boolean;
+  notes?: string;
+  monthlyIncomeEstimate?: number;
+  completedAt?: string;
+}
+
 export interface AllocationItem {
   id: string;
   name: string;
@@ -104,4 +115,6 @@ export interface AppSettings {
   supabaseAnonKey?: string;
   syncEnabled?: boolean;
   overBudgetThreshold: number; // default 80 (%)
+  profile?: UserProfile;
+  hasCompletedOnboarding?: boolean;
 }

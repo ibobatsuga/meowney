@@ -11,6 +11,7 @@ import {
   Coffee, 
   Layout, 
   ChevronRight,
+  UserCheck,
   Heart
 } from 'lucide-react';
 import type { AppSettings } from '../../types';
@@ -21,6 +22,7 @@ interface MobileMenuProps {
   onSwitchToFullDesktop: () => void;
   onNavigateSubpage: (page: string) => void;
   onLockApp?: () => void;
+  onOpenOnboarding: () => void;
   settings: AppSettings;
   onDataRefresh: () => void;
 }
@@ -29,6 +31,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   onSwitchToFullDesktop,
   onNavigateSubpage,
   onLockApp,
+  onOpenOnboarding,
   settings,
   onDataRefresh,
 }) => {
@@ -58,17 +61,27 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
     reader.readAsText(file);
   };
 
+  const profile = settings.profile;
+
   const menuItems = [
     {
-      icon: <BadgePercent className="w-5 h-5 text-rose-600" />,
+      icon: <UserCheck className="w-5 h-5 text-rose-600" />,
+      title: 'Profil & Persona Finansial',
+      desc: profile 
+        ? `${profile.maritalStatus === 'single' ? 'Single' : 'Menikah'} • ${profile.isSandwich ? 'Sandwich Gen' : 'Bebas Sandwich'}`
+        : 'Atur status pernikahan & generasi sandwich',
+      action: onOpenOnboarding
+    },
+    {
+      icon: <BadgePercent className="w-5 h-5 text-amber-600" />,
       title: 'Setup Alokasi Dua Lapis',
-      desc: 'Atur gaji, porsi keluarga vs personal',
+      desc: 'Atur penghasilan & persentase pos belanja',
       action: () => onNavigateSubpage('setup')
     },
     {
-      icon: <ShieldAlert className="w-5 h-5 text-amber-600" />,
+      icon: <ShieldAlert className="w-5 h-5 text-rose-500" />,
       title: 'Hutang & Piutang',
-      desc: 'Pantau jatuh tempo kewajiban & tagihan',
+      desc: 'Pantau jatuh tempo kewajiban & pinjaman',
       action: () => onNavigateSubpage('debts')
     },
     {

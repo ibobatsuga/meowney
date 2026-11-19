@@ -28,6 +28,7 @@ import { HutangPiutangSection } from './components/HutangPiutangSection';
 import { AsetKekayaanSection } from './components/AsetKekayaanSection';
 import { PanduanSection } from './components/PanduanSection';
 import { PengaturanSection } from './components/PengaturanSection';
+import { OnboardingModal } from './components/OnboardingModal';
 
 // Mobile-First Components
 import { MobileBottomNav, type MobileTab } from './components/mobile/MobileBottomNav';
@@ -46,7 +47,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Flame,
-  ArrowLeft
+  ArrowLeft,
+  UserCheck
 } from 'lucide-react';
 import { formatMonthYear, formatIDR } from './utils/formatters';
 
@@ -63,6 +65,7 @@ export const App: React.FC = () => {
   const [mobileTab, setMobileTab] = useState<MobileTab>('home');
   const [mobileSubpage, setMobileSubpage] = useState<string | null>(null);
   const [isQuickInputOpen, setIsQuickInputOpen] = useState<boolean>(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
 
   const [isLocked, setIsLocked] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
@@ -78,7 +81,8 @@ export const App: React.FC = () => {
     id: 'current',
     casualGateEnabled: false,
     localEncryptionEnabled: false,
-    overBudgetThreshold: 80
+    overBudgetThreshold: 80,
+    hasCompletedOnboarding: false
   });
 
   // Backup Reminder Banner (FR-19)
@@ -111,6 +115,10 @@ export const App: React.FC = () => {
       setSettings(appSettings);
       if (appSettings.casualGateEnabled && appSettings.casualPassword) {
         setIsLocked(true);
+      }
+      // Trigger onboarding on first visit if not yet completed
+      if (!appSettings.hasCompletedOnboarding && !appSettings.profile) {
+        setIsOnboardingOpen(true);
       }
     }
 
@@ -169,6 +177,16 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-stone-900 flex flex-col font-sans selection:bg-rose-100 selection:text-rose-900">
       
+      {/* Interactive Onboarding Wizard Modal */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        initialProfile={settings.profile}
+        onComplete={() => {
+          setIsOnboardingOpen(false);
+          loadData();
+        }}
+      />
+
       {/* Gate Modal if Locked (FR-24 & FR-28) */}
       {isLocked && (
         <GateModal
@@ -318,8 +336,10 @@ export const App: React.FC = () => {
                     setup={setup}
                     transactions={transactions}
                     pockets={pockets}
+                    profile={settings.profile}
                     onOpenQuickInput={() => setIsQuickInputOpen(true)}
                     onNavigateToTab={(t) => setMobileTab(t)}
+                    onOpenOnboarding={() => setIsOnboardingOpen(true)}
                   />
                 )}
 
@@ -347,6 +367,7 @@ export const App: React.FC = () => {
                     onSwitchToFullDesktop={() => setAppMode('full')}
                     onNavigateSubpage={(p) => setMobileSubpage(p)}
                     onLockApp={() => setIsLocked(true)}
+                    onOpenOnboarding={() => setIsOnboardingOpen(true)}
                     settings={settings}
                     onDataRefresh={loadData}
                   />
@@ -372,11 +393,23 @@ export const App: React.FC = () => {
            ========================================================================= */
         <div className="flex-1 flex flex-col">
           
-          {/* Full Desktop Header with Mobile Switcher Pill */}
+          {/* Full Desktop Header with Mobile Switcher Pill & Profile Badge */}
           <div className="bg-stone-900 text-stone-200 py-1.5 px-4 text-xs font-semibold flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
+            <div className="flex items-center gap-3">
               <span>💻 Mode Lengkap Desktop Aktif</span>
-            </span>
+              {settings.profile && (
+                <button
+                  onClick={() => setIsOnboardingOpen(true)}
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-stone-800 text-amber-300 hover:bg-stone-700 transition text-[11px]"
+                >
+                  <UserCheck className="w-3 h-3" />
+                  <span>
+                    {settings.profile.name} ({settings.profile.maritalStatus === 'single' ? 'Single' : 'Menikah'} • {settings.profile.isSandwich ? 'Sandwich Gen' : 'Bebas Sandwich'})
+                  </span>
+                </button>
+              )}
+            </div>
+
             <button
               onClick={() => setAppMode('mobile')}
               className="px-2.5 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 transition"

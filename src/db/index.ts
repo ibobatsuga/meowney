@@ -7,7 +7,8 @@ import type {
   Asset,
   ReflectionData,
   AppSettings,
-  AllocationItem
+  AllocationItem,
+  MaritalStatus
 } from '../types';
 
 export class MeowneyDatabase extends Dexie {
@@ -47,27 +48,99 @@ export const DEFAULT_POCKETS: Pocket[] = [
   { id: 'pkt-tabungan-rumah', name: 'Tabungan Rumah', type: 'goal', color: 'indigo', targetAmount: 150000000, isDefault: true },
 ];
 
-// Default Family Allocations according to FR-02
-export const DEFAULT_FAMILY_ALLOCATION_DEFAULTS: Omit<AllocationItem, 'amount' | 'id'>[] = [
-  { name: 'Beras & Sembako', percentage: 30 },
-  { name: 'Listrik & Air', percentage: 15 },
-  { name: 'Pendidikan & Les', percentage: 20 },
-  { name: 'Transportasi & Bensin', percentage: 15 },
-  { name: 'Cicilan & Hutang Keluarga', percentage: 10 },
-  { name: 'Orang Tua / Mertua', percentage: 5 },
-  { name: 'Dana Darurat & Tabungan', percentage: 5 },
-];
+// Profile Tailored Allocation Generator
+export function getProfileBasedAllocations(
+  maritalStatus: MaritalStatus = 'married_with_kids',
+  isSandwich: boolean = true
+) {
+  if (isSandwich) {
+    if (maritalStatus === 'single') {
+      // Single Sandwich (Nafkahi ortu/adik dari gaji sendiri)
+      return {
+        familySplit: 45,
+        personalSplit: 55,
+        familyItems: [
+          { name: 'Kiriman Orang Tua / Mertua', percentage: 40 },
+          { name: 'Kebutuhan Sembako Rumah Ortu', percentage: 25 },
+          { name: 'Bantuan Pendidikan Adik', percentage: 20 },
+          { name: 'Dana Darurat Keluarga', percentage: 15 },
+        ],
+        personalItems: [
+          { name: 'Kost & Kebutuhan Pribadi', percentage: 35 },
+          { name: 'Tabungan Mandiri', percentage: 20 },
+          { name: 'Investasi Masa Depan', percentage: 15 },
+          { name: 'Dana Darurat Pribadi', percentage: 15 },
+          { name: 'Self Reward & Healing', percentage: 15 },
+        ]
+      };
+    } else {
+      // Married Sandwich (Classic: Anak, Pasangan, dan Orang Tua)
+      return {
+        familySplit: 70,
+        personalSplit: 30,
+        familyItems: [
+          { name: 'Beras & Sembako', percentage: 30 },
+          { name: 'Listrik & Air', percentage: 15 },
+          { name: 'Pendidikan & Les', percentage: 20 },
+          { name: 'Transportasi & Bensin', percentage: 15 },
+          { name: 'Cicilan & Hutang Keluarga', percentage: 10 },
+          { name: 'Orang Tua / Mertua', percentage: 5 },
+          { name: 'Dana Darurat & Tabungan', percentage: 5 },
+        ],
+        personalItems: [
+          { name: 'Kebutuhan Pribadi', percentage: 40 },
+          { name: 'Healing & Santai', percentage: 15 },
+          { name: 'Tabungan Mandiri', percentage: 10 },
+          { name: 'Investasi', percentage: 10 },
+          { name: 'Dana Darurat Pribadi', percentage: 10 },
+          { name: 'Cicilan Pribadi', percentage: 5 },
+          { name: 'Self Reward', percentage: 10 },
+        ]
+      };
+    }
+  } else {
+    // Non-Sandwich (Kemandirian tanpa beban kiriman wajib orang tua)
+    if (maritalStatus === 'single') {
+      return {
+        familySplit: 15,
+        personalSplit: 85,
+        familyItems: [
+          { name: 'Bakti Sukarela Ortu & Sedekah', percentage: 60 },
+          { name: 'Dana Cadangan Sosial', percentage: 40 },
+        ],
+        personalItems: [
+          { name: 'Kebutuhan Pokok & Kost', percentage: 35 },
+          { name: 'Tabungan Rumah / Impian', percentage: 25 },
+          { name: 'Investasi & Portofolio', percentage: 20 },
+          { name: 'Dana Darurat Pribadi', percentage: 10 },
+          { name: 'Hobi, Healing & Self-Reward', percentage: 10 },
+        ]
+      };
+    } else {
+      // Married Non-Sandwich (Fokus keluarga inti)
+      return {
+        familySplit: 60,
+        personalSplit: 40,
+        familyItems: [
+          { name: 'Kebutuhan Dapur & Belanja Rumah', percentage: 35 },
+          { name: 'Tagihan Rumah, Listrik & Air', percentage: 20 },
+          { name: 'Pendidikan & Kebutuhan Anak', percentage: 25 },
+          { name: 'Dana Darurat Keluarga', percentage: 20 },
+        ],
+        personalItems: [
+          { name: 'Tabungan Investasi Masa Depan', percentage: 35 },
+          { name: 'Kebutuhan Pribadi Suami & Istri', percentage: 30 },
+          { name: 'Liburan & Quality Time Bersama', percentage: 20 },
+          { name: 'Self Reward Pasangan', percentage: 15 },
+        ]
+      };
+    }
+  }
+}
 
-// Default Personal Allocations according to FR-02
-export const DEFAULT_PERSONAL_ALLOCATION_DEFAULTS: Omit<AllocationItem, 'amount' | 'id'>[] = [
-  { name: 'Kebutuhan Pribadi', percentage: 40 },
-  { name: 'Healing & Santai', percentage: 15 },
-  { name: 'Tabungan Mandiri', percentage: 10 },
-  { name: 'Investasi', percentage: 10 },
-  { name: 'Dana Darurat Pribadi', percentage: 10 },
-  { name: 'Cicilan Pribadi', percentage: 5 },
-  { name: 'Self Reward', percentage: 10 },
-];
+// Fallback defaults
+export const DEFAULT_FAMILY_ALLOCATION_DEFAULTS = getProfileBasedAllocations('married_with_kids', true).familyItems;
+export const DEFAULT_PERSONAL_ALLOCATION_DEFAULTS = getProfileBasedAllocations('married_with_kids', true).personalItems;
 
 // Default Expense Categories for Input Harian (FR-06)
 export const EXPENSE_CATEGORIES = [
@@ -115,6 +188,7 @@ export async function initializeDatabase() {
       casualGateEnabled: false,
       localEncryptionEnabled: false,
       overBudgetThreshold: 80,
+      hasCompletedOnboarding: false,
     });
   }
 }
