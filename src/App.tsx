@@ -294,6 +294,7 @@ export const App: React.FC = () => {
                 {mobileSubpage === 'setup' && (
                   <SetupAwalSection
                     currentMonth={selectedMonth}
+                    profile={settings.profile}
                     onSetupSaved={loadData}
                     onGoToDashboard={() => setMobileSubpage(null)}
                   />
@@ -442,6 +443,7 @@ export const App: React.FC = () => {
             {currentTab === 'setup' && (
               <SetupAwalSection
                 currentMonth={selectedMonth}
+                profile={settings.profile}
                 onSetupSaved={loadData}
                 onGoToDashboard={() => setCurrentTab('dashboard')}
               />

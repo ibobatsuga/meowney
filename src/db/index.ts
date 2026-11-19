@@ -55,13 +55,15 @@ export function getProfileBasedAllocations(
 ) {
   if (isSandwich) {
     if (maritalStatus === 'single') {
-      // Single Sandwich (Nafkahi ortu/adik dari gaji sendiri)
+      // 1. Single Sandwich (Menanggung ortu/adik dari gaji sendiri)
       return {
         familySplit: 45,
         personalSplit: 55,
+        layer1Label: 'Kiriman Keluarga & Orang Tua',
+        layer2Label: 'Kebutuhan Mandiri & Masa Depan',
         familyItems: [
           { name: 'Kiriman Orang Tua / Mertua', percentage: 40 },
-          { name: 'Kebutuhan Sembako Rumah Ortu', percentage: 25 },
+          { name: 'Sembako & Rumah Orang Tua', percentage: 25 },
           { name: 'Bantuan Pendidikan Adik', percentage: 20 },
           { name: 'Dana Darurat Keluarga', percentage: 15 },
         ],
@@ -74,18 +76,20 @@ export function getProfileBasedAllocations(
         ]
       };
     } else {
-      // Married Sandwich (Classic: Anak, Pasangan, dan Orang Tua)
+      // 2. Married Sandwich (Anak, Pasangan, Orang Tua/Mertua)
       return {
         familySplit: 70,
         personalSplit: 30,
+        layer1Label: 'Kewajiban Dapur, Anak & Orang Tua',
+        layer2Label: 'Personal, Healing & Self-Reward',
         familyItems: [
-          { name: 'Beras & Sembako', percentage: 30 },
-          { name: 'Listrik & Air', percentage: 15 },
-          { name: 'Pendidikan & Les', percentage: 20 },
+          { name: 'Beras & Sembako Dapur', percentage: 30 },
+          { name: 'Listrik, Air & Internet', percentage: 15 },
+          { name: 'Pendidikan & Les Anak', percentage: 20 },
           { name: 'Transportasi & Bensin', percentage: 15 },
           { name: 'Cicilan & Hutang Keluarga', percentage: 10 },
-          { name: 'Orang Tua / Mertua', percentage: 5 },
-          { name: 'Dana Darurat & Tabungan', percentage: 5 },
+          { name: 'Kiriman Orang Tua / Mertua', percentage: 5 },
+          { name: 'Dana Darurat Keluarga', percentage: 5 },
         ],
         personalItems: [
           { name: 'Kebutuhan Pribadi', percentage: 40 },
@@ -99,39 +103,45 @@ export function getProfileBasedAllocations(
       };
     }
   } else {
-    // Non-Sandwich (Kemandirian tanpa beban kiriman wajib orang tua)
+    // 3. Non-Sandwich (Tidak menanggung kiriman wajib orang tua)
     if (maritalStatus === 'single') {
+      // Single Bebas Sandwich (Fokus mandiri & aset)
       return {
-        familySplit: 15,
-        personalSplit: 85,
+        familySplit: 25,
+        personalSplit: 75,
+        layer1Label: 'Tempat Tinggal & Komitmen Pokok',
+        layer2Label: 'Masa Depan, Investasi & Gaya Hidup',
         familyItems: [
-          { name: 'Bakti Sukarela Ortu & Sedekah', percentage: 60 },
-          { name: 'Dana Cadangan Sosial', percentage: 40 },
+          { name: 'Sewa Kost / Tempat Tinggal', percentage: 40 },
+          { name: 'Listrik, Air & Utilitas', percentage: 25 },
+          { name: 'Bakti Sukarela Ortu & Sedekah', percentage: 20 },
+          { name: 'Dana Darurat Mandiri', percentage: 15 },
         ],
         personalItems: [
-          { name: 'Kebutuhan Pokok & Kost', percentage: 35 },
+          { name: 'Makan & Belanja Pokok', percentage: 35 },
           { name: 'Tabungan Rumah / Impian', percentage: 25 },
-          { name: 'Investasi & Portofolio', percentage: 20 },
-          { name: 'Dana Darurat Pribadi', percentage: 10 },
-          { name: 'Hobi, Healing & Self-Reward', percentage: 10 },
+          { name: 'Investasi & Saham/Reksadana', percentage: 20 },
+          { name: 'Hobi, Healing & Self-Reward', percentage: 20 },
         ]
       };
     } else {
-      // Married Non-Sandwich (Fokus keluarga inti)
+      // Married Bebas Sandwich (Fokus keluarga inti)
       return {
         familySplit: 60,
         personalSplit: 40,
+        layer1Label: 'Kebutuhan Rumah Tangga & Anak',
+        layer2Label: 'Tabungan Bersama & Personal',
         familyItems: [
           { name: 'Kebutuhan Dapur & Belanja Rumah', percentage: 35 },
           { name: 'Tagihan Rumah, Listrik & Air', percentage: 20 },
           { name: 'Pendidikan & Kebutuhan Anak', percentage: 25 },
-          { name: 'Dana Darurat Keluarga', percentage: 20 },
+          { name: 'Dana Darurat Keluarga Inti', percentage: 20 },
         ],
         personalItems: [
-          { name: 'Tabungan Investasi Masa Depan', percentage: 35 },
-          { name: 'Kebutuhan Pribadi Suami & Istri', percentage: 30 },
+          { name: 'Tabungan & Investasi Bersama', percentage: 35 },
+          { name: 'Kebutuhan Pribadi Pasangan', percentage: 30 },
           { name: 'Liburan & Quality Time Bersama', percentage: 20 },
-          { name: 'Self Reward Pasangan', percentage: 15 },
+          { name: 'Self Reward Suami/Istri', percentage: 15 },
         ]
       };
     }

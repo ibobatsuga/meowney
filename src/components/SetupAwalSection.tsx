@@ -9,24 +9,27 @@ import {
   CheckCircle2, 
   History, 
   ArrowRight,
-  Info
+  Info,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
-import type { BudgetSetup, AllocationItem } from '../types';
+import type { BudgetSetup, AllocationItem, UserProfile } from '../types';
 import { 
-  DEFAULT_FAMILY_ALLOCATION_DEFAULTS, 
-  DEFAULT_PERSONAL_ALLOCATION_DEFAULTS, 
+  getProfileBasedAllocations,
   db 
 } from '../db';
 import { formatIDR, formatMonthYear } from '../utils/formatters';
 
 interface SetupAwalSectionProps {
   currentMonth: string;
+  profile?: UserProfile;
   onSetupSaved: () => void;
   onGoToDashboard: () => void;
 }
 
 export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
   currentMonth,
+  profile,
   onSetupSaved,
   onGoToDashboard,
 }) => {
@@ -43,10 +46,15 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const profileAllocations = getProfileBasedAllocations(
+    profile?.maritalStatus || 'married_with_kids',
+    profile ? profile.isSandwich : true
+  );
+
   // Initialize or load setup for currentMonth
   useEffect(() => {
     loadSetupData();
-  }, [currentMonth]);
+  }, [currentMonth, profile]);
 
   const loadSetupData = async () => {
     const setup = await db.setups.get(currentMonth);
@@ -56,25 +64,24 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
     if (setup) {
       setExistingSetup(setup);
       setIncomeInput(setup.income.toString());
-      setFamilySplit(setup.familyPercentage || 70);
-      setPersonalSplit(setup.personalPercentage || 30);
+      setFamilySplit(setup.familyPercentage ?? profileAllocations.familySplit);
+      setPersonalSplit(setup.personalPercentage ?? profileAllocations.personalSplit);
       setFamilyItems(setup.familyAllocation);
       setPersonalItems(setup.personalAllocation);
     } else {
       setExistingSetup(null);
-      // Empty input initially per PRD AC (edge): kolom kosong tampil kosong
-      setIncomeInput('');
-      setFamilySplit(70);
-      setPersonalSplit(30);
+      setIncomeInput(profile?.monthlyIncomeEstimate ? String(profile.monthlyIncomeEstimate) : '');
+      setFamilySplit(profileAllocations.familySplit);
+      setPersonalSplit(profileAllocations.personalSplit);
 
-      // Initialize default allocation items
-      const fam = DEFAULT_FAMILY_ALLOCATION_DEFAULTS.map((item, idx) => ({
+      // Initialize default allocation items based on User Profile
+      const fam = profileAllocations.familyItems.map((item, idx) => ({
         id: `fam-${idx}-${Date.now()}`,
         name: item.name,
         percentage: item.percentage,
         amount: 0
       }));
-      const per = DEFAULT_PERSONAL_ALLOCATION_DEFAULTS.map((item, idx) => ({
+      const per = profileAllocations.personalItems.map((item, idx) => ({
         id: `per-${idx}-${Date.now()}`,
         name: item.name,
         percentage: item.percentage,
@@ -82,6 +89,30 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
       }));
       setFamilyItems(fam);
       setPersonalItems(per);
+    }
+  };
+
+  const applyProfileTemplate = () => {
+    if (confirm(`Terapkan template alokasi untuk persona ${profile ? (profile.isSandwich ? 'Sandwich Gen' : 'Bebas Sandwich') : 'Standar'}?`)) {
+      setFamilySplit(profileAllocations.familySplit);
+      setPersonalSplit(profileAllocations.personalSplit);
+
+      const fam = profileAllocations.familyItems.map((item, idx) => ({
+        id: `fam-tmpl-${idx}-${Date.now()}`,
+        name: item.name,
+        percentage: item.percentage,
+        amount: 0
+      }));
+      const per = profileAllocations.personalItems.map((item, idx) => ({
+        id: `per-tmpl-${idx}-${Date.now()}`,
+        name: item.name,
+        percentage: item.percentage,
+        amount: 0
+      }));
+      setFamilyItems(fam);
+      setPersonalItems(per);
+      setSuccessMessage('Template sesuai profil berhasil diterapkan ke form!');
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
@@ -122,7 +153,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
   const handleAddFamilyItem = () => {
     setFamilyItems(prev => [
       ...prev,
-      { id: `fam-${Date.now()}`, name: 'Pos Keluarga Baru', percentage: 0, amount: 0 }
+      { id: `fam-${Date.now()}`, name: 'Pos Lapis 1 Baru', percentage: 0, amount: 0 }
     ]);
   };
 
@@ -156,7 +187,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
     }
 
     if (!isFamilyValid) {
-      setValidationError(`Total alokasi keluarga saat ini ${totalFamilyPercentage}%. Harus pas 100%.`);
+      setValidationError(`Total alokasi lapis pertama saat ini ${totalFamilyPercentage}%. Harus pas 100%.`);
       return;
     }
 
@@ -218,24 +249,33 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-black text-stone-900 tracking-tight">
-              Setup Awal & Alokasi Dua Lapis
+              Setup Alokasi Anggaran
             </h2>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold">
               {formatMonthYear(currentMonth)}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
-            Prioritaskan kewajiban keluarga terlebih dahulu, lalu bagi porsi personal secara adil dan tenang.
+            Bagi porsi pendapatan secara proporsional sesuai kebutuhan hidup dan masa depan Anda.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            onClick={applyProfileTemplate}
+            title="Terapkan pos & persentase bawaan profil persona"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold transition"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+            <span>Template Profil</span>
+          </button>
+
+          <button
             onClick={() => setShowHistory(!showHistory)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-semibold transition"
           >
             <History className="w-4 h-4 text-stone-500" />
-            <span>{showHistory ? 'Tutup Riwayat' : `Riwayat Setup (${allSetups.length})`}</span>
+            <span>{showHistory ? 'Tutup' : `Riwayat (${allSetups.length})`}</span>
           </button>
 
           {existingSetup && (
@@ -267,7 +307,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                     <p className="text-xs font-bold text-stone-900">{formatMonthYear(s.month)}</p>
                     <p className="text-xs text-stone-500">Penghasilan: {formatIDR(s.income)}</p>
                     <p className="text-[10px] text-stone-400">
-                      Keluarga {s.familyPercentage}% • Personal {s.personalPercentage}%
+                      Lapis 1 {s.familyPercentage}% • Personal {s.personalPercentage}%
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -334,21 +374,21 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           </div>
         </div>
 
-        {/* Pembagian Dua Lapis: Slider / Split Control */}
+        {/* Pembagian Dua Lapis: Slider */}
         <div className="border-t border-stone-100 pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <div>
               <span className="text-xs font-bold text-stone-700">Rasio Pembagian Pokok:</span>
               <p className="text-xs text-stone-500">
-                Berapa persen dari penghasilan dialokasikan untuk keluarga vs kebutuhan personal Anda?
+                Sesuaikan porsi lapis 1 (komitmen/keluarga) vs lapis 2 (personal & tabungan masa depan).
               </p>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
-                Keluarga: {familySplit}% ({formatIDR(familyBudgetTotal)})
+                Lapis 1: {familySplit}% ({formatIDR(familyBudgetTotal)})
               </span>
               <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-                Personal: {personalSplit}% ({formatIDR(personalBudgetTotal)})
+                Lapis 2: {personalSplit}% ({formatIDR(personalBudgetTotal)})
               </span>
             </div>
           </div>
@@ -368,15 +408,15 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
               className="w-full accent-rose-600 h-2 bg-stone-200 rounded-lg cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-stone-400">
-              <span>0% Keluarga (100% Personal)</span>
+              <span>0% Lapis 1 (100% Personal)</span>
               <span>50:50 Seimbang</span>
-              <span>100% Keluarga (0% Personal)</span>
+              <span>100% Lapis 1 (0% Personal)</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Step 2: Alokasi Lapis 1 - Keluarga */}
+      {/* Step 2: Alokasi Lapis 1 */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -389,10 +429,10 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
               </span>
             </div>
             <h3 className="text-lg font-bold text-stone-900 mt-0.5">
-              Alokasi Pengeluaran Keluarga ({familySplit}% = {formatIDR(familyBudgetTotal)})
+              {profileAllocations.layer1Label} ({familySplit}% = {formatIDR(familyBudgetTotal)})
             </h3>
             <p className="text-xs text-stone-500">
-              Sembako, orang tua, biaya anak, les, listrik, dan kewajiban dapur utama.
+              Kewajiban pokok dan komitmen yang harus dipenuhi terlebih dahulu.
             </p>
           </div>
           <button
@@ -453,7 +493,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
 
         {!isFamilyValid && (
           <p className="text-xs text-rose-600 font-medium">
-            ⚠️ Persentase pos keluarga harus berjumlah tepat 100% (saat ini {totalFamilyPercentage}%).
+            ⚠️ Persentase pos lapis 1 harus berjumlah tepat 100% (saat ini {totalFamilyPercentage}%).
           </p>
         )}
       </div>
@@ -471,7 +511,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
               </span>
             </div>
             <h3 className="text-lg font-bold text-stone-900 mt-0.5">
-              Alokasi Personal & Masa Depan Anda ({personalSplit}% = {formatIDR(personalBudgetTotal)})
+              {profileAllocations.layer2Label} ({personalSplit}% = {formatIDR(personalBudgetTotal)})
             </h3>
             <p className="text-xs text-stone-500">
               Kebutuhan mandiri, tabungan pribadi, investasi, self-reward, dan healing yang berhak Anda nikmati.
@@ -551,7 +591,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
               Total Rencana Anggaran: {formatIDR(numericIncome)}
             </p>
             <p className="text-[11px] text-stone-500">
-              Keluarga {familySplit}% ({formatIDR(familyBudgetTotal)}) + Personal {personalSplit}% ({formatIDR(personalBudgetTotal)})
+              Lapis 1 {familySplit}% ({formatIDR(familyBudgetTotal)}) + Lapis 2 {personalSplit}% ({formatIDR(personalBudgetTotal)})
             </p>
           </div>
         </div>

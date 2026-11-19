@@ -11,7 +11,8 @@ import {
   Layers, 
   Smile, 
   Wallet,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import type { MaritalStatus, UserProfile, BudgetSetup } from '../types';
 import { db, getProfileBasedAllocations } from '../db';
@@ -37,8 +38,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [incomeStr, setIncomeStr] = useState<string>(
     initialProfile?.monthlyIncomeEstimate ? String(initialProfile.monthlyIncomeEstimate) : '10000000'
   );
+  const [applyToCurrentMonth, setApplyToCurrentMonth] = useState<boolean>(true);
 
-  const numericIncome = Math.round(Number(incomeStr) || 0);
+  const numericIncome = Math.round(Number(incomeStr) || 10000000);
   const allocationTemplate = getProfileBasedAllocations(maritalStatus, isSandwich);
 
   const familyTotalRupiah = Math.round((numericIncome * allocationTemplate.familySplit) / 100);
@@ -67,16 +69,28 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       completedAt: new Date().toISOString()
     };
 
-    // Save to settings
-    await db.settings.update('current', {
-      profile: finalProfile,
-      hasCompletedOnboarding: true
-    });
+    // 1. Save or update settings in Dexie
+    const currentSettings = await db.settings.get('current');
+    if (currentSettings) {
+      await db.settings.update('current', {
+        profile: finalProfile,
+        hasCompletedOnboarding: true
+      });
+    } else {
+      await db.settings.put({
+        id: 'current',
+        casualGateEnabled: false,
+        localEncryptionEnabled: false,
+        overBudgetThreshold: 80,
+        profile: finalProfile,
+        hasCompletedOnboarding: true
+      });
+    }
 
-    // Check if current month setup already exists; if not, auto-generate template setup!
-    const curMonth = getCurrentMonthStr();
-    const existingSetup = await db.setups.get(curMonth);
-    if (!existingSetup && numericIncome > 0) {
+    // 2. ALWAYS update current month setup if user wants (checked by default)
+    if (applyToCurrentMonth && numericIncome > 0) {
+      const curMonth = getCurrentMonthStr();
+
       const familyAllocation = allocationTemplate.familyItems.map((item, idx) => ({
         id: `fam-onb-${idx}-${Date.now()}`,
         name: item.name,
@@ -125,7 +139,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <img src="/lucky-cat.png" alt="Lucky Cat JS" className="w-full h-full object-contain" />
             </div>
             <span className="text-xs font-bold text-stone-900">
-              Personalitasi Meowney
+              Personalisasi Meowney
             </span>
           </div>
 
@@ -154,7 +168,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 Halo! Selamat Datang di Meowney 🐾
               </h2>
               <p className="text-xs sm:text-sm text-stone-500 max-w-sm mx-auto">
-                Bantu Meowney mengenal situasi hidupmu agar perencanaan anggaran bisa disesuaikan khusus untukmu.
+                Bantu Meowney mengenal situasi hidupmu agar alokasi pos anggaran langsung disesuaikan dengan kebutuhanmu.
               </p>
             </div>
 
@@ -175,7 +189,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div className="pt-2">
               <button
                 onClick={() => setStep(2)}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-bold text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-bold text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Lanjut: Status Kehidupan</span>
                 <ArrowRight className="w-4 h-4" />
@@ -193,7 +207,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 Bagaimana Status Kehidupanmu Saat Ini?
               </h3>
               <p className="text-xs text-stone-500">
-                Pilih yang paling menggambarkan kondisi rumah tanggamu.
+                Pilih yang paling menggambarkan kondisi rumah tanggamu saat ini.
               </p>
             </div>
 
@@ -214,7 +228,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     {maritalStatus === 'single' && <CheckCircle2 className="w-4 h-4 text-rose-600" />}
                   </div>
                   <p className="text-[11px] text-stone-500 mt-0.5">
-                    Menghasilkan uang mandiri untuk kebutuhan pribadi, kost/tempat tinggal, dan tabungan masa depan.
+                    Mengelola penghasilan mandiri untuk kebutuhan pribadi, kost/tempat tinggal, dan masa depan.
                   </p>
                 </div>
               </div>
@@ -235,7 +249,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     {maritalStatus === 'married' && <CheckCircle2 className="w-4 h-4 text-rose-600" />}
                   </div>
                   <p className="text-[11px] text-stone-500 mt-0.5">
-                    Mengelola anggaran rumah tangga bersama pasangan dan menyiapkan hunian / masa depan bersama.
+                    Mengelola anggaran rumah tangga bersama pasangan dan menyiapkan tabungan hunian bersama.
                   </p>
                 </div>
               </div>
@@ -256,7 +270,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     {maritalStatus === 'married_with_kids' && <CheckCircle2 className="w-4 h-4 text-rose-600" />}
                   </div>
                   <p className="text-[11px] text-stone-500 mt-0.5">
-                    Menanggung biaya anak (SPP, les, nutrisi), kebutuhan dapur keluarga, dan perlindungan masa depan.
+                    Menanggung biaya anak (sekolah, les, nutrisi), kebutuhan dapur keluarga, dan proteksi masa depan.
                   </p>
                 </div>
               </div>
@@ -271,7 +285,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Lanjut: Tanggungan Keluarga</span>
                 <ArrowRight className="w-4 h-4" />
@@ -289,7 +303,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 Apakah Kamu Termasuk Generasi Sandwich?
               </h3>
               <p className="text-xs text-stone-500">
-                Pilih jujur agar alokasi kiriman keluarga atau orang tua diatur proporsional.
+                Pilih secara jujur agar pos kiriman orang tua diatur proporsional.
               </p>
             </div>
 
@@ -312,10 +326,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     {isSandwich && <CheckCircle2 className="w-4 h-4 text-rose-600" />}
                   </div>
                   <p className="text-[11px] text-stone-600 mt-1 leading-relaxed">
-                    Dari penghasilanku, aku <strong>rutin menanggung / mengirim uang</strong> untuk orang tua, mertua, atau adik/keluarga besar di luar kebutuhan diri sendiri.
+                    Dari penghasilanku, aku <strong>rutin menanggung / mengirim uang</strong> untuk orang tua, mertua, atau adik/keluarga besar.
                   </p>
                   <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-200/80 text-rose-800">
-                    Pos Alokasi Kiriman Orang Tua & Keluarga Aktif Otomatis
+                    Pos Kiriman Orang Tua & Sembako Keluarga Aktif Otomatis
                   </span>
                 </div>
               </div>
@@ -338,10 +352,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     {!isSandwich && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                   </div>
                   <p className="text-[11px] text-stone-600 mt-1 leading-relaxed">
-                    Penghasilanku difokuskan penuh untuk kebutuhan mandiri atau keluarga inti saja, tanpa kewajiban kiriman rutin orang tua/saudara.
+                    Penghasilanku difokuskan penuh untuk kebutuhan mandiri atau keluarga inti saja tanpa kiriman wajib orang tua.
                   </p>
                   <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/80 text-emerald-800">
-                    Fokus Maksimal pada Tabungan, Investasi & Kebutuhan Inti
+                    Fokus Maksimal pada Tabungan Mandiri, Investasi & Gaya Hidup
                   </span>
                 </div>
               </div>
@@ -356,9 +370,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </button>
               <button
                 onClick={() => setStep(4)}
-                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Lanjut: Estimasi Gaji & Template</span>
+                <span>Lanjut: Rekomendasi Template</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -367,22 +381,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         {/* ================= STEP 4: ESTIMASI PENGHASILAN & TEMPLATE ================= */}
         {step === 4 && (
-          <div className="space-y-5 animate-in slide-in-from-right duration-200">
+          <div className="space-y-4 animate-in slide-in-from-right duration-200">
             <div>
               <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Langkah Terakhir</span>
-              <h3 className="text-xl font-black text-stone-900 mt-0.5">
-                Estimasi Penghasilan & Template Alokasi
+              <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-0.5">
+                Template Anggaran Khusus Untukmu
               </h3>
               <p className="text-xs text-stone-500">
-                Meowney menyiapkan rumus persentase yang disesuaikan khusus untuk profilmu.
+                Meowney telah menyiapkan rumus persentase yang disesuaikan dengan pilihanmu.
               </p>
             </div>
 
             {/* Profile Result Badge */}
-            <div className="p-3.5 rounded-2xl bg-stone-100 border border-stone-200 flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-stone-100 border border-stone-200 flex items-center gap-3">
               <span className="text-2xl">{badgeInfo.emoji}</span>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="text-xs font-black text-stone-900">{badgeInfo.title}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-700">
                     {name || 'Teman Meowney'}
@@ -395,7 +409,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             {/* Income Input */}
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-1">
-                Estimasi Penghasilan Bersih Bulanan (IDR)
+                Estimasi Penghasilan Bulanan (IDR)
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-stone-400 text-xs">
@@ -409,37 +423,65 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     setIncomeStr(cleaned);
                   }}
                   placeholder="10.000.000"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-stone-300 font-extrabold text-stone-900 text-base focus:ring-2 focus:ring-rose-500"
+                  className="w-full pl-10 pr-3.5 py-2 rounded-xl border border-stone-300 font-extrabold text-stone-900 text-sm sm:text-base focus:ring-2 focus:ring-rose-500"
                 />
               </div>
             </div>
 
-            {/* Two-layer Split Preview */}
-            <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2 text-xs">
-              <span className="font-bold text-stone-700 block text-[11px] uppercase tracking-wider">
-                Rekomendasi Pembagian Alokasi Otomatis:
-              </span>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-white border border-stone-200">
-                  <span className="text-[10px] text-stone-500 block">Keluarga / Komitmen Luar:</span>
-                  <span className="font-bold text-rose-700">{allocationTemplate.familySplit}%</span>
-                  <span className="block text-[11px] font-semibold text-stone-900 mt-0.5">
-                    {formatIDR(familyTotalRupiah)}
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-white border border-stone-200">
-                  <span className="text-[10px] text-stone-500 block">Personal & Masa Depan:</span>
-                  <span className="font-bold text-amber-700">{allocationTemplate.personalSplit}%</span>
-                  <span className="block text-[11px] font-semibold text-stone-900 mt-0.5">
-                    {formatIDR(personalTotalRupiah)}
-                  </span>
-                </div>
+            {/* Rincian Pos Template Baru */}
+            <div className="bg-stone-50 rounded-2xl p-3.5 border border-stone-200 space-y-2 text-xs max-h-48 overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-stone-200/60 pb-1.5">
+                <span className="font-bold text-stone-800 text-[11px] uppercase tracking-wider">
+                  Daftar Pos yang Akan Dibuat:
+                </span>
+                <span className="text-[10px] font-semibold text-rose-600">
+                  {allocationTemplate.familySplit}% : {allocationTemplate.personalSplit}%
+                </span>
               </div>
-              <p className="text-[10px] text-stone-400 italic">
-                * Persentase dan pos pengeluaran tetap dapat Anda ubah bebas kapan saja di menu Setup Awal.
-              </p>
+
+              {/* Lapis 1 */}
+              <div>
+                <span className="text-[10px] font-bold text-rose-800 block mb-1">
+                  🔹 {allocationTemplate.layer1Label} ({allocationTemplate.familySplit}% = {formatIDR(familyTotalRupiah)}):
+                </span>
+                <ul className="space-y-0.5 text-[11px] text-stone-600 pl-3 list-disc">
+                  {allocationTemplate.familyItems.map(item => (
+                    <li key={item.name} className="flex justify-between">
+                      <span>{item.name}</span>
+                      <span className="font-semibold text-stone-800">{item.percentage}% ({formatIDR(Math.round(familyTotalRupiah * item.percentage / 100))})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Lapis 2 */}
+              <div className="pt-1.5 border-t border-stone-200/60">
+                <span className="text-[10px] font-bold text-amber-800 block mb-1">
+                  🔸 {allocationTemplate.layer2Label} ({allocationTemplate.personalSplit}% = {formatIDR(personalTotalRupiah)}):
+                </span>
+                <ul className="space-y-0.5 text-[11px] text-stone-600 pl-3 list-disc">
+                  {allocationTemplate.personalItems.map(item => (
+                    <li key={item.name} className="flex justify-between">
+                      <span>{item.name}</span>
+                      <span className="font-semibold text-stone-800">{item.percentage}% ({formatIDR(Math.round(personalTotalRupiah * item.percentage / 100))})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
+
+            {/* Checkbox Konfirmasi Terapkan */}
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-stone-700 bg-rose-50/60 p-2.5 rounded-xl border border-rose-200">
+              <input
+                type="checkbox"
+                checked={applyToCurrentMonth}
+                onChange={(e) => setApplyToCurrentMonth(e.target.checked)}
+                className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500"
+              />
+              <span className="font-bold">
+                Terapkan template alokasi & pos baru ini ke anggaran bulan berjalan
+              </span>
+            </label>
 
             <div className="pt-2 flex items-center justify-between gap-3">
               <button
@@ -450,10 +492,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </button>
               <button
                 onClick={handleFinishOnboarding}
-                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-extrabold text-sm shadow-md shadow-rose-600/25 transition flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-extrabold text-sm shadow-md shadow-rose-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Mulai Gunakan Meowney!</span>
+                <span>Simpan & Terapkan Perubahan!</span>
               </button>
             </div>
           </div>
