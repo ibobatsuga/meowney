@@ -5,8 +5,6 @@ import {
   PiggyBank, 
   BookOpen, 
   Settings2, 
-  Download, 
-  Upload, 
   Lock, 
   Coffee, 
   Layout, 
@@ -15,8 +13,6 @@ import {
   Heart
 } from 'lucide-react';
 import type { AppSettings } from '../../types';
-import { exportAllDataJSON, downloadFile, importDataJSON } from '../../utils/exportImport';
-import { getTodayDateStr } from '../../utils/formatters';
 
 interface MobileMenuProps {
   onSwitchToFullDesktop: () => void;
@@ -33,34 +29,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   onLockApp,
   onOpenOnboarding,
   settings,
-  onDataRefresh,
 }) => {
-  const handleExport = async () => {
-    try {
-      const json = await exportAllDataJSON();
-      downloadFile(json, `Meowney-Backup-${getTodayDateStr()}.json`, 'application/json');
-      alert('Data cadangan JSON berhasil diunduh ke perangkat Anda!');
-    } catch (e: any) {
-      alert('Gagal ekspor: ' + e.message);
-    }
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!confirm('Impor akan menimpa data di browser. Lanjutkan?')) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target?.result as string;
-      const res = await importDataJSON(content);
-      alert(res.message);
-      if (res.success) onDataRefresh();
-    };
-    reader.readAsText(file);
-  };
-
   const profile = settings.profile;
 
   const menuItems = [
@@ -148,38 +117,16 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
         ))}
       </div>
 
-      {/* Quick Backup & Gate Card */}
-      <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm space-y-3">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">
-          Kedaulatan & Keamanan Data
-        </span>
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={handleExport}
-            className="py-2.5 px-3 rounded-xl bg-stone-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Ekspor JSON</span>
-          </button>
-
-          <label className="py-2.5 px-3 rounded-xl border border-stone-300 text-stone-700 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-stone-50 transition">
-            <Upload className="w-3.5 h-3.5 text-stone-500" />
-            <span>Impor JSON</span>
-            <input type="file" accept=".json" onChange={handleImport} className="hidden" />
-          </label>
-        </div>
-
-        {settings.casualGateEnabled && onLockApp && (
-          <button
-            onClick={onLockApp}
-            className="w-full py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Kunci Aplikasi Sekarang</span>
-          </button>
-        )}
-      </div>
+      {/* Casual Gate Lock Button if Enabled */}
+      {settings.casualGateEnabled && onLockApp && (
+        <button
+          onClick={onLockApp}
+          className="w-full py-3 rounded-2xl bg-white border border-stone-200/80 hover:bg-stone-50 text-stone-700 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition"
+        >
+          <Lock className="w-3.5 h-3.5 text-stone-500" />
+          <span>Kunci Aplikasi Sekarang</span>
+        </button>
+      )}
 
       {/* Traktir Kopi Banner */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-5 border border-amber-200 flex items-center justify-between gap-3">

@@ -113,12 +113,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-stone-900 via-stone-800 to-rose-700 bg-clip-text text-transparent">
                   Meowney
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 tracking-wider uppercase">
-                  Sandwich
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 tracking-wider uppercase">
+                  Money Planner
                 </span>
               </div>
               <p className="text-xs text-stone-500 hidden sm:block">
-                Perencanaan Anggaran Generasi Sandwich
+                Money Planner & Perencanaan Anggaran
               </p>
             </div>
           </div>

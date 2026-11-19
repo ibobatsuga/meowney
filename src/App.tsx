@@ -242,7 +242,7 @@ export const App: React.FC = () => {
                 <h1 className="text-base font-extrabold text-stone-900 tracking-tight leading-none">
                   Meowney
                 </h1>
-                <span className="text-[10px] text-rose-600 font-bold">Simple Sandwich</span>
+                <span className="text-[10px] text-emerald-600 font-bold">Money Planner</span>
               </div>
             </div>
 
