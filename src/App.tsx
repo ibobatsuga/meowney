@@ -9,7 +9,6 @@ import type {
   Pocket, 
   DebtLoan, 
   Asset, 
-  ReflectionData, 
   AppSettings 
 } from './types';
 import { getCurrentMonthStr } from './utils/formatters';
@@ -29,11 +28,42 @@ import { HutangPiutangSection } from './components/HutangPiutangSection';
 import { AsetKekayaanSection } from './components/AsetKekayaanSection';
 import { PanduanSection } from './components/PanduanSection';
 import { PengaturanSection } from './components/PengaturanSection';
-import { Heart, Bell, Shield, X } from 'lucide-react';
+
+// Mobile-First Components
+import { MobileBottomNav, type MobileTab } from './components/mobile/MobileBottomNav';
+import { MobileHome } from './components/mobile/MobileHome';
+import { MobileQuickInputModal } from './components/mobile/MobileQuickInputModal';
+import { MobilePockets } from './components/mobile/MobilePockets';
+import { MobileRekap } from './components/mobile/MobileRekap';
+import { MobileMenu } from './components/mobile/MobileMenu';
+
+import { 
+  Heart, 
+  Bell, 
+  X, 
+  Smartphone, 
+  Layout, 
+  ChevronLeft, 
+  ChevronRight,
+  Flame,
+  ArrowLeft
+} from 'lucide-react';
+import { formatMonthYear, formatIDR } from './utils/formatters';
 
 export const App: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthStr());
-  const [currentTab, setCurrentTab] = useState<NavTab>('welcome');
+  
+  // App Mode: 'mobile' (default simple) or 'full' (desktop/admin)
+  const [appMode, setAppMode] = useState<'mobile' | 'full'>('mobile');
+  
+  // Desktop Tab
+  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+  
+  // Mobile Tab & Subpages
+  const [mobileTab, setMobileTab] = useState<MobileTab>('home');
+  const [mobileSubpage, setMobileSubpage] = useState<string | null>(null);
+  const [isQuickInputOpen, setIsQuickInputOpen] = useState<boolean>(false);
+
   const [isLocked, setIsLocked] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -84,20 +114,11 @@ export const App: React.FC = () => {
       }
     }
 
-    // Check backup reminder (FR-19: if transactions > 10 and no backup recently)
     if (txList.length >= 10 && !appSettings?.lastBackupDate) {
       setShowBackupReminder(true);
     }
 
-    // Default tab routing (FR-01: if has setup, start at dashboard)
-    if (!isLoaded) {
-      if (curSetup || sList.length > 0) {
-        setCurrentTab('dashboard');
-      } else {
-        setCurrentTab('welcome');
-      }
-      setIsLoaded(true);
-    }
+    setIsLoaded(true);
   };
 
   useEffect(() => {
@@ -116,9 +137,23 @@ export const App: React.FC = () => {
   const monthExpense = monthTxs.filter(t => t.mode === 'expense').reduce((a, b) => a + b.amount, 0);
   const safeDaily = calculateSafeDailySpend(setup, monthExpense);
 
+  const handlePrevMonth = () => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const prevDate = new Date(year, month - 2, 1);
+    const newMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(newMonthStr);
+  };
+
+  const handleNextMonth = () => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const nextDate = new Date(year, month, 1);
+    const newMonthStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(newMonthStr);
+  };
+
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-600">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBF9F6] text-stone-600">
         <div className="text-center space-y-3">
           <div className="w-16 h-16 rounded-3xl bg-amber-100 mx-auto flex items-center justify-center animate-bounce">
             <img src="/lucky-cat.png" alt="Logo" className="w-12 h-12 object-contain" />
@@ -132,7 +167,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBF9F6] text-stone-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FBF9F6] text-stone-900 flex flex-col font-sans selection:bg-rose-100 selection:text-rose-900">
       
       {/* Gate Modal if Locked (FR-24 & FR-28) */}
       {isLocked && (
@@ -143,26 +178,23 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Top Navigation Bar with Lucky Cat JS Logo */}
-      <Navbar
-        currentTab={currentTab}
-        onTabChange={(tab) => setCurrentTab(tab)}
-        selectedMonth={selectedMonth}
-        onMonthChange={(month) => setSelectedMonth(month)}
-        safeDailySpend={safeDaily.safeDailyAmount}
-        totalLiquidBalance={totalLiquid}
-        hasSetup={!!setup}
-        onLockApp={() => setIsLocked(true)}
-        isGateEnabled={settings.casualGateEnabled}
+      {/* Quick Input Modal for Mobile */}
+      <MobileQuickInputModal
+        isOpen={isQuickInputOpen}
+        onClose={() => setIsQuickInputOpen(false)}
+        pockets={pockets}
+        currentMonth={selectedMonth}
+        setup={setup}
+        onSaved={loadData}
       />
 
-      {/* Backup Reminder Banner (FR-19) */}
+      {/* Backup Reminder Banner */}
       {showBackupReminder && (
         <div className="bg-amber-100 border-b border-amber-200 px-4 py-2 text-xs text-amber-900 flex items-center justify-between max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-700 shrink-0" />
             <span>
-              <strong>Pengingat Cadangan:</strong> Anda sudah mencatat banyak transaksi! Jangan lupa ekspor cadangan data JSON Anda di menu Pengaturan agar tidak hilang bila browser dibersihkan.
+              <strong>Pengingat Cadangan:</strong> Ekspor cadangan JSON Anda secara berkala agar aman dari pembersihan browser.
             </span>
           </div>
           <button
@@ -174,142 +206,334 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentTab === 'welcome' && (
-          <WelcomeSection
-            hasSetup={allSetups.length > 0}
-            onStart={() => setCurrentTab(allSetups.length > 0 ? 'dashboard' : 'setup')}
-          />
-        )}
+      {/* =========================================================================
+          MODE 1: MOBILE-FIRST SIMPEL (Default)
+          ========================================================================= */}
+      {appMode === 'mobile' ? (
+        <div className="flex-1 flex flex-col max-w-md w-full mx-auto px-4 sm:px-0">
+          
+          {/* Mobile Top Header */}
+          <header className="sticky top-0 z-30 bg-[#FBF9F6]/95 backdrop-blur-md pt-3 pb-2.5 flex items-center justify-between border-b border-stone-200/60 mb-3">
+            
+            {/* Logo & Brand */}
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-2xl bg-white p-1 shadow-sm border border-stone-200/80">
+                <img src="/lucky-cat.png" alt="Lucky Cat JS" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <h1 className="text-base font-extrabold text-stone-900 tracking-tight leading-none">
+                  Meowney
+                </h1>
+                <span className="text-[10px] text-rose-600 font-bold">Simple Sandwich</span>
+              </div>
+            </div>
 
-        {currentTab === 'setup' && (
-          <SetupAwalSection
-            currentMonth={selectedMonth}
-            onSetupSaved={loadData}
-            onGoToDashboard={() => setCurrentTab('dashboard')}
-          />
-        )}
+            {/* Center: Month Selector */}
+            <div className="flex items-center bg-white px-2 py-1 rounded-xl border border-stone-200/80 shadow-xs">
+              <button onClick={handlePrevMonth} className="p-1 text-stone-500 hover:text-stone-900">
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="px-1.5 text-xs font-bold text-stone-800">
+                {formatMonthYear(selectedMonth)}
+              </span>
+              <button onClick={handleNextMonth} className="p-1 text-stone-500 hover:text-stone-900">
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-        {currentTab === 'input' && (
-          <InputHarianSection
-            currentMonth={selectedMonth}
-            pockets={pockets}
-            transactions={transactions}
-            setup={setup}
-            assets={assets}
-            onTransactionsChanged={loadData}
-          />
-        )}
+            {/* Mode Switcher Button (To Full Mode) */}
+            <button
+              onClick={() => setAppMode('full')}
+              title="Beralih ke Tampilan Lengkap Desktop"
+              className="px-2.5 py-1.5 rounded-xl bg-stone-200/80 hover:bg-stone-300 text-stone-800 text-[11px] font-bold flex items-center gap-1 transition"
+            >
+              <Layout className="w-3.5 h-3.5 text-stone-600" />
+              <span className="hidden sm:inline">Lengkap</span>
+            </button>
+          </header>
 
-        {currentTab === 'dashboard' && (
-          <DashboardSection
-            currentMonth={selectedMonth}
-            setup={setup}
-            transactions={transactions}
-            pockets={pockets}
-            assets={assets}
-            debts={debts}
-            onNavigate={(tab) => setCurrentTab(tab)}
-          />
-        )}
+          {/* Subpage Header (if user opened a specific page from Menu) */}
+          {mobileSubpage && (
+            <div className="mb-3 flex items-center justify-between bg-white p-2.5 rounded-2xl border border-stone-200/80">
+              <button
+                onClick={() => setMobileSubpage(null)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-rose-600"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Kembali ke Menu</span>
+              </button>
+              <span className="text-xs font-black uppercase text-stone-400">
+                {mobileSubpage}
+              </span>
+            </div>
+          )}
 
-        {currentTab === 'pockets' && (
-          <KantongUangSection
-            pockets={pockets}
-            transactions={transactions}
-            onDataChanged={loadData}
-            onNavigateToInput={() => setCurrentTab('input')}
-          />
-        )}
+          {/* Mobile Main Content */}
+          <main className="flex-1">
+            {mobileSubpage ? (
+              /* Specific detailed screen opened inside mobile container */
+              <div className="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm mb-20 text-left">
+                {mobileSubpage === 'setup' && (
+                  <SetupAwalSection
+                    currentMonth={selectedMonth}
+                    onSetupSaved={loadData}
+                    onGoToDashboard={() => setMobileSubpage(null)}
+                  />
+                )}
+                {mobileSubpage === 'debts' && (
+                  <HutangPiutangSection
+                    debts={debts}
+                    pockets={pockets}
+                    onDataChanged={loadData}
+                  />
+                )}
+                {mobileSubpage === 'assets' && (
+                  <AsetKekayaanSection
+                    assets={assets}
+                    pockets={pockets}
+                    debts={debts}
+                    setup={setup}
+                    allTransactions={transactions}
+                    onDataChanged={loadData}
+                  />
+                )}
+                {mobileSubpage === 'guide' && (
+                  <PanduanSection />
+                )}
+                {mobileSubpage === 'settings' && (
+                  <PengaturanSection
+                    settings={settings}
+                    pockets={pockets}
+                    onSettingsChanged={loadData}
+                    onDataReset={loadData}
+                  />
+                )}
+              </div>
+            ) : (
+              /* Standard 4 Mobile Tabs */
+              <>
+                {mobileTab === 'home' && (
+                  <MobileHome
+                    currentMonth={selectedMonth}
+                    setup={setup}
+                    transactions={transactions}
+                    pockets={pockets}
+                    onOpenQuickInput={() => setIsQuickInputOpen(true)}
+                    onNavigateToTab={(t) => setMobileTab(t)}
+                  />
+                )}
 
-        {currentTab === 'rekap' && (
-          <RekapRealityCheckSection
-            currentMonth={selectedMonth}
-            setup={setup}
-            transactions={transactions}
-            onMonthClosed={loadData}
-            onNavigateToNextMonth={(nextM) => {
-              setSelectedMonth(nextM);
-              setCurrentTab('dashboard');
+                {mobileTab === 'pockets' && (
+                  <MobilePockets
+                    pockets={pockets}
+                    transactions={transactions}
+                    onDataChanged={loadData}
+                    onOpenQuickTransfer={() => setIsQuickInputOpen(true)}
+                  />
+                )}
+
+                {mobileTab === 'rekap' && (
+                  <MobileRekap
+                    currentMonth={selectedMonth}
+                    setup={setup}
+                    transactions={transactions}
+                    pockets={pockets}
+                    onMonthClosed={loadData}
+                  />
+                )}
+
+                {mobileTab === 'menu' && (
+                  <MobileMenu
+                    onSwitchToFullDesktop={() => setAppMode('full')}
+                    onNavigateSubpage={(p) => setMobileSubpage(p)}
+                    onLockApp={() => setIsLocked(true)}
+                    settings={settings}
+                    onDataRefresh={loadData}
+                  />
+                )}
+              </>
+            )}
+          </main>
+
+          {/* Bottom Fixed Navigation Bar */}
+          <MobileBottomNav
+            currentTab={mobileTab}
+            onTabChange={(tab) => {
+              setMobileSubpage(null);
+              setMobileTab(tab);
             }}
+            onOpenQuickInput={() => setIsQuickInputOpen(true)}
           />
-        )}
 
-        {currentTab === 'reports' && (
-          <LaporanSection
-            currentMonth={selectedMonth}
-            setup={setup}
-            transactions={transactions}
-            pockets={pockets}
-          />
-        )}
-
-        {currentTab === 'annual' && (
-          <TahunanSection
-            transactions={transactions}
-            selectedYear={parseInt(selectedMonth.split('-')[0], 10)}
-          />
-        )}
-
-        {currentTab === 'reflection' && (
-          <RefleksiSection
-            currentMonth={selectedMonth}
-          />
-        )}
-
-        {currentTab === 'debts' && (
-          <HutangPiutangSection
-            debts={debts}
-            pockets={pockets}
-            onDataChanged={loadData}
-          />
-        )}
-
-        {currentTab === 'assets' && (
-          <AsetKekayaanSection
-            assets={assets}
-            pockets={pockets}
-            debts={debts}
-            setup={setup}
-            allTransactions={transactions}
-            onDataChanged={loadData}
-          />
-        )}
-
-        {currentTab === 'guide' && (
-          <PanduanSection />
-        )}
-
-        {currentTab === 'settings' && (
-          <PengaturanSection
-            settings={settings}
-            pockets={pockets}
-            onSettingsChanged={loadData}
-            onDataReset={loadData}
-          />
-        )}
-      </main>
-
-      {/* Warm Footer */}
-      <footer className="border-t border-stone-200 bg-white/60 py-6 text-center text-xs text-stone-500 mt-12">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img src="/lucky-cat.png" alt="Lucky Cat JS" className="w-6 h-6 object-contain" />
-            <span className="font-extrabold text-stone-800">Meowney</span>
-            <span>— Perencanaan Anggaran Generasi Sandwich di Indonesia</span>
-          </div>
-          <div className="flex items-center gap-4 text-[11px]">
-            <span>100% Local-First (IndexedDB)</span>
-            <span>•</span>
-            <span>Rupiah (IDR) Saja</span>
-            <span>•</span>
-            <span className="flex items-center gap-1 text-rose-600 font-semibold">
-              Dibuat dengan <Heart className="w-3.5 h-3.5 fill-rose-600" /> untuk Pejuang Keluarga
-            </span>
-          </div>
         </div>
-      </footer>
+      ) : (
+        /* =========================================================================
+           MODE 2: FULL DESKTOP (PRD 11 SECTIONS)
+           ========================================================================= */
+        <div className="flex-1 flex flex-col">
+          
+          {/* Full Desktop Header with Mobile Switcher Pill */}
+          <div className="bg-stone-900 text-stone-200 py-1.5 px-4 text-xs font-semibold flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <span>💻 Mode Lengkap Desktop Aktif</span>
+            </span>
+            <button
+              onClick={() => setAppMode('mobile')}
+              className="px-2.5 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 transition"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Beralih ke Versi Simpel Mobile</span>
+            </button>
+          </div>
+
+          <Navbar
+            currentTab={currentTab}
+            onTabChange={(tab) => setCurrentTab(tab)}
+            selectedMonth={selectedMonth}
+            onMonthChange={(month) => setSelectedMonth(month)}
+            safeDailySpend={safeDaily.safeDailyAmount}
+            totalLiquidBalance={totalLiquid}
+            hasSetup={!!setup}
+            onLockApp={() => setIsLocked(true)}
+            isGateEnabled={settings.casualGateEnabled}
+          />
+
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {currentTab === 'welcome' && (
+              <WelcomeSection
+                hasSetup={allSetups.length > 0}
+                onStart={() => setCurrentTab(allSetups.length > 0 ? 'dashboard' : 'setup')}
+              />
+            )}
+
+            {currentTab === 'setup' && (
+              <SetupAwalSection
+                currentMonth={selectedMonth}
+                onSetupSaved={loadData}
+                onGoToDashboard={() => setCurrentTab('dashboard')}
+              />
+            )}
+
+            {currentTab === 'input' && (
+              <InputHarianSection
+                currentMonth={selectedMonth}
+                pockets={pockets}
+                transactions={transactions}
+                setup={setup}
+                assets={assets}
+                onTransactionsChanged={loadData}
+              />
+            )}
+
+            {currentTab === 'dashboard' && (
+              <DashboardSection
+                currentMonth={selectedMonth}
+                setup={setup}
+                transactions={transactions}
+                pockets={pockets}
+                assets={assets}
+                debts={debts}
+                onNavigate={(tab) => setCurrentTab(tab)}
+              />
+            )}
+
+            {currentTab === 'pockets' && (
+              <KantongUangSection
+                pockets={pockets}
+                transactions={transactions}
+                onDataChanged={loadData}
+                onNavigateToInput={() => setCurrentTab('input')}
+              />
+            )}
+
+            {currentTab === 'rekap' && (
+              <RekapRealityCheckSection
+                currentMonth={selectedMonth}
+                setup={setup}
+                transactions={transactions}
+                onMonthClosed={loadData}
+                onNavigateToNextMonth={(nextM) => {
+                  setSelectedMonth(nextM);
+                  setCurrentTab('dashboard');
+                }}
+              />
+            )}
+
+            {currentTab === 'reports' && (
+              <LaporanSection
+                currentMonth={selectedMonth}
+                setup={setup}
+                transactions={transactions}
+                pockets={pockets}
+              />
+            )}
+
+            {currentTab === 'annual' && (
+              <TahunanSection
+                transactions={transactions}
+                selectedYear={parseInt(selectedMonth.split('-')[0], 10)}
+              />
+            )}
+
+            {currentTab === 'reflection' && (
+              <RefleksiSection
+                currentMonth={selectedMonth}
+              />
+            )}
+
+            {currentTab === 'debts' && (
+              <HutangPiutangSection
+                debts={debts}
+                pockets={pockets}
+                onDataChanged={loadData}
+              />
+            )}
+
+            {currentTab === 'assets' && (
+              <AsetKekayaanSection
+                assets={assets}
+                pockets={pockets}
+                debts={debts}
+                setup={setup}
+                allTransactions={transactions}
+                onDataChanged={loadData}
+              />
+            )}
+
+            {currentTab === 'guide' && (
+              <PanduanSection />
+            )}
+
+            {currentTab === 'settings' && (
+              <PengaturanSection
+                settings={settings}
+                pockets={pockets}
+                onSettingsChanged={loadData}
+                onDataReset={loadData}
+              />
+            )}
+          </main>
+
+          <footer className="border-t border-stone-200 bg-white/60 py-6 text-center text-xs text-stone-500 mt-12">
+            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <img src="/lucky-cat.png" alt="Lucky Cat JS" className="w-6 h-6 object-contain" />
+                <span className="font-extrabold text-stone-800">Meowney</span>
+                <span>— Perencanaan Anggaran Generasi Sandwich di Indonesia</span>
+              </div>
+              <div className="flex items-center gap-4 text-[11px]">
+                <span>100% Local-First (IndexedDB)</span>
+                <span>•</span>
+                <span>Rupiah (IDR) Saja</span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-rose-600 font-semibold">
+                  Dibuat dengan <Heart className="w-3.5 h-3.5 fill-rose-600" /> untuk Pejuang Keluarga
+                </span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      )}
 
     </div>
   );
