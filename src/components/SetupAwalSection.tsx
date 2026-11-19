@@ -448,8 +448,9 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           {familyItems.map((item) => {
             const itemRupiah = Math.round((familyBudgetTotal * (item.percentage || 0)) / 100);
             return (
-              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex-1 min-w-0">
+              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2 shadow-2xs">
+                {/* Line 1: Full-width Category Name & Delete */}
+                <div className="flex items-center justify-between gap-2">
                   <input
                     type="text"
                     value={item.name}
@@ -457,14 +458,24 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       const newName = e.target.value;
                       setFamilyItems(prev => prev.map(i => i.id === item.id ? { ...i, name: newName } : i));
                     }}
+                    placeholder="Nama Pos Pengeluaran"
                     className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-rose-500"
                   />
-                  <span className="text-xs font-semibold text-stone-500 block mt-0.5">
-                    {formatIDR(itemRupiah)}
-                  </span>
+                  <button
+                    onClick={() => handleRemoveFamilyItem(item.id)}
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition shrink-0"
+                    title="Hapus pos"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Line 2: Calculated Amount & Percentage Input */}
+                <div className="flex items-center justify-between pt-1 border-t border-stone-200/60">
+                  <span className="text-xs font-bold text-stone-600">
+                    {formatIDR(itemRupiah)}
+                  </span>
+
                   <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1 shadow-2xs">
                     <input
                       type="number"
@@ -477,14 +488,6 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                     />
                     <span className="text-xs text-stone-400 font-semibold">%</span>
                   </div>
-
-                  <button
-                    onClick={() => handleRemoveFamilyItem(item.id)}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
-                    title="Hapus pos"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             );
@@ -530,8 +533,9 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           {personalItems.map((item) => {
             const itemRupiah = Math.round((personalBudgetTotal * (item.percentage || 0)) / 100);
             return (
-              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-amber-50/30 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex-1 min-w-0">
+              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-amber-50/40 space-y-2 shadow-2xs">
+                {/* Line 1: Full-width Category Name & Delete */}
+                <div className="flex items-center justify-between gap-2">
                   <input
                     type="text"
                     value={item.name}
@@ -539,14 +543,24 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       const newName = e.target.value;
                       setPersonalItems(prev => prev.map(i => i.id === item.id ? { ...i, name: newName } : i));
                     }}
+                    placeholder="Nama Pos Pengeluaran"
                     className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-amber-500"
                   />
-                  <span className="text-xs font-semibold text-stone-500 block mt-0.5">
-                    {formatIDR(itemRupiah)}
-                  </span>
+                  <button
+                    onClick={() => handleRemovePersonalItem(item.id)}
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition shrink-0"
+                    title="Hapus pos"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Line 2: Calculated Amount & Percentage Input */}
+                <div className="flex items-center justify-between pt-1 border-t border-stone-200/60">
+                  <span className="text-xs font-bold text-stone-600">
+                    {formatIDR(itemRupiah)}
+                  </span>
+
                   <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1 shadow-2xs">
                     <input
                       type="number"
@@ -559,14 +573,6 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                     />
                     <span className="text-xs text-stone-400 font-semibold">%</span>
                   </div>
-
-                  <button
-                    onClick={() => handleRemovePersonalItem(item.id)}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
-                    title="Hapus pos"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             );
