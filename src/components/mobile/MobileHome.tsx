@@ -171,9 +171,9 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
 
           <button
             onClick={onOpenQuickInput}
-            className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1 shrink-0"
           >
-            <span>+ Catat</span>
+            <span>Catat</span>
           </button>
         </div>
 
@@ -283,7 +283,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
             onClick={onOpenQuickInput}
             className="text-xs font-bold text-rose-600 hover:underline"
           >
-            + Tambah
+            Catat Baru
           </button>
         </div>
 

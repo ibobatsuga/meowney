@@ -94,27 +94,27 @@ export const HutangPiutangSection: React.FC<HutangPiutangSectionProps> = ({
     <div className="space-y-8 py-4 text-left">
       
       {/* Title */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-200 pb-4">
         <div>
-          <h2 className="text-2xl font-black text-stone-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
             Pencatatan Hutang & Piutang
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
-            Pantau kewajiban yang harus dibayar (hutang) dan hak tagih (piutang) agar hubungan keluarga & rekan tetap sehat.
+            Pantau kewajiban hutang dan hak tagih piutang Anda.
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap"
         >
           <Plus className="w-4 h-4" />
-          <span>+ Catat Baru</span>
+          <span>Catat Baru</span>
         </button>
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm space-y-1">
           <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">
             Total Hutang Aktif (Kewajiban)

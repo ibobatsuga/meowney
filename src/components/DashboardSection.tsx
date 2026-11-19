@@ -95,10 +95,10 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => onNavigate('input')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ Catat Transaksi</span>
+            <span>Catat Transaksi</span>
           </button>
         </div>
       </div>

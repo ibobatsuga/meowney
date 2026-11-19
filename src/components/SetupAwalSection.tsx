@@ -245,10 +245,10 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
     <div className="space-y-8 py-4 text-left">
       
       {/* Title & History Toggle */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
+      <div className="flex flex-col gap-3 border-b border-stone-200 pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-black text-stone-900 tracking-tight">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
               Setup Alokasi Anggaran
             </h2>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold">
@@ -260,11 +260,11 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <button
             onClick={applyProfileTemplate}
             title="Terapkan pos & persentase bawaan profil persona"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold transition"
           >
             <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
             <span>Template Profil</span>
@@ -272,7 +272,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
 
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-semibold transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-semibold transition"
           >
             <History className="w-4 h-4 text-stone-500" />
             <span>{showHistory ? 'Tutup' : `Riwayat (${allSetups.length})`}</span>
@@ -281,7 +281,7 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           {existingSetup && (
             <button
               onClick={onGoToDashboard}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm ml-auto"
             >
               <span>Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -444,12 +444,12 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {familyItems.map((item) => {
             const itemRupiah = Math.round((familyBudgetTotal * (item.percentage || 0)) / 100);
             return (
-              <div key={item.id} className="p-4 rounded-2xl border border-stone-200 bg-stone-50/50 flex items-center justify-between gap-3">
-                <div className="flex-1">
+              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex-1 min-w-0">
                   <input
                     type="text"
                     value={item.name}
@@ -457,15 +457,15 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       const newName = e.target.value;
                       setFamilyItems(prev => prev.map(i => i.id === item.id ? { ...i, name: newName } : i));
                     }}
-                    className="w-full bg-transparent font-semibold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-rose-500"
+                    className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-rose-500"
                   />
-                  <span className="text-xs font-bold text-stone-600 block mt-0.5">
+                  <span className="text-xs font-semibold text-stone-500 block mt-0.5">
                     {formatIDR(itemRupiah)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1">
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1 shadow-2xs">
                     <input
                       type="number"
                       min="0"
@@ -473,14 +473,14 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       value={item.percentage === 0 ? '' : item.percentage}
                       onChange={(e) => handleFamilyPercentageChange(item.id, Number(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-12 text-center text-xs font-bold text-stone-900 focus:outline-none"
+                      className="w-10 text-center text-xs font-bold text-stone-900 focus:outline-none"
                     />
                     <span className="text-xs text-stone-400 font-semibold">%</span>
                   </div>
 
                   <button
                     onClick={() => handleRemoveFamilyItem(item.id)}
-                    className="p-1 text-stone-400 hover:text-rose-600 rounded-lg transition"
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                     title="Hapus pos"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -526,12 +526,12 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {personalItems.map((item) => {
             const itemRupiah = Math.round((personalBudgetTotal * (item.percentage || 0)) / 100);
             return (
-              <div key={item.id} className="p-4 rounded-2xl border border-stone-200 bg-amber-50/20 flex items-center justify-between gap-3">
-                <div className="flex-1">
+              <div key={item.id} className="p-3.5 rounded-2xl border border-stone-200 bg-amber-50/30 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex-1 min-w-0">
                   <input
                     type="text"
                     value={item.name}
@@ -539,15 +539,15 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       const newName = e.target.value;
                       setPersonalItems(prev => prev.map(i => i.id === item.id ? { ...i, name: newName } : i));
                     }}
-                    className="w-full bg-transparent font-semibold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-amber-500"
+                    className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-b focus:border-amber-500"
                   />
-                  <span className="text-xs font-bold text-stone-600 block mt-0.5">
+                  <span className="text-xs font-semibold text-stone-500 block mt-0.5">
                     {formatIDR(itemRupiah)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1">
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center border border-stone-300 rounded-xl bg-white px-2 py-1 shadow-2xs">
                     <input
                       type="number"
                       min="0"
@@ -555,14 +555,14 @@ export const SetupAwalSection: React.FC<SetupAwalSectionProps> = ({
                       value={item.percentage === 0 ? '' : item.percentage}
                       onChange={(e) => handlePersonalPercentageChange(item.id, Number(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-12 text-center text-xs font-bold text-stone-900 focus:outline-none"
+                      className="w-10 text-center text-xs font-bold text-stone-900 focus:outline-none"
                     />
                     <span className="text-xs text-stone-400 font-semibold">%</span>
                   </div>
 
                   <button
                     onClick={() => handleRemovePersonalItem(item.id)}
-                    className="p-1 text-stone-400 hover:text-rose-600 rounded-lg transition"
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                     title="Hapus pos"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

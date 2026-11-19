@@ -272,16 +272,20 @@ export const App: React.FC = () => {
 
           {/* Subpage Header (if user opened a specific page from Menu) */}
           {mobileSubpage && (
-            <div className="mb-3 flex items-center justify-between bg-white p-2.5 rounded-2xl border border-stone-200/80">
+            <div className="mb-3 flex items-center justify-between bg-white px-3 py-2.5 rounded-2xl border border-stone-200/80 shadow-2xs">
               <button
                 onClick={() => setMobileSubpage(null)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-rose-600"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-rose-600 transition"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Kembali ke Menu</span>
               </button>
-              <span className="text-xs font-black uppercase text-stone-400">
-                {mobileSubpage}
+              <span className="text-[11px] font-bold text-stone-500">
+                {mobileSubpage === 'setup' && 'Setup Anggaran'}
+                {mobileSubpage === 'debts' && 'Hutang & Piutang'}
+                {mobileSubpage === 'assets' && 'Aset & Kekayaan'}
+                {mobileSubpage === 'guide' && 'Panduan Keuangan'}
+                {mobileSubpage === 'settings' && 'Pengaturan'}
               </span>
             </div>
           )}
@@ -290,7 +294,7 @@ export const App: React.FC = () => {
           <main className="flex-1">
             {mobileSubpage ? (
               /* Specific detailed screen opened inside mobile container */
-              <div className="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm mb-20 text-left">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/80 shadow-sm mb-20 text-left overflow-hidden">
                 {mobileSubpage === 'setup' && (
                   <SetupAwalSection
                     currentMonth={selectedMonth}

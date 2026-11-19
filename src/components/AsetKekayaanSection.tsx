@@ -114,9 +114,9 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
     <div className="space-y-8 py-4 text-left">
       
       {/* Title */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-200 pb-4">
         <div>
-          <h2 className="text-2xl font-black text-stone-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
             Aset, Tabungan & Kekayaan Bersih
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
@@ -126,10 +126,10 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap"
         >
           <Plus className="w-4 h-4" />
-          <span>+ Tambah Aset</span>
+          <span>Tambah Aset</span>
         </button>
       </div>
 
@@ -148,17 +148,17 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t md:border-t-0 md:border-l border-stone-700 pt-4 md:pt-0 md:pl-6 text-xs">
-            <div>
-              <span className="text-stone-400 block text-[10px] uppercase">Kas & Kantong</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t md:border-t-0 md:border-l border-stone-700 pt-4 md:pt-0 md:pl-6 text-xs">
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-stone-400 block text-[10px] uppercase font-bold">Kas & Kantong</span>
               <span className="font-bold text-sm text-white">{formatIDR(netWorthData.liquidBalance)}</span>
             </div>
-            <div>
-              <span className="text-stone-400 block text-[10px] uppercase">Aset Non-Kas</span>
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-stone-400 block text-[10px] uppercase font-bold">Aset Non-Kas</span>
               <span className="font-bold text-sm text-white">{formatIDR(netWorthData.totalOtherAssets)}</span>
             </div>
-            <div>
-              <span className="text-stone-400 block text-[10px] uppercase">Kewajiban Hutang</span>
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-stone-400 block text-[10px] uppercase font-bold">Kewajiban Hutang</span>
               <span className="font-bold text-sm text-rose-400">−{formatIDR(netWorthData.totalActiveDebt)}</span>
             </div>
           </div>
@@ -181,89 +181,135 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
 
         {monthlySalary <= 0 ? (
           <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-stone-500 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-stone-400" />
+            <AlertCircle className="w-4 h-4 text-stone-400 shrink-0" />
             <span>
               Milestone belum dapat dihitung karena estimasi penghasilan bulanan di Setup Awal belum diisi.
             </span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
+          <div className="space-y-3">
             {/* Level 1: 1x Gaji */}
-            <div className={`p-5 rounded-2xl border transition-all ${
+            <div className={`p-4 rounded-2xl border transition-all ${
               emergencyPocketBalance >= ef1x
-                ? 'bg-emerald-50/80 border-emerald-200'
-                : 'bg-stone-50 border-stone-200'
+                ? 'bg-emerald-50/70 border-emerald-300'
+                : 'bg-stone-50/80 border-stone-200'
             }`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-stone-700">Level 1: 1x Gaji</span>
-                {emergencyPocketBalance >= ef1x ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Tercapai
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                    emergencyPocketBalance >= ef1x ? 'bg-emerald-200 text-emerald-900' : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    1
                   </span>
-                ) : (
-                  <span className="text-[10px] text-stone-400 font-semibold">Dalam Proses</span>
-                )}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-stone-900">Level 1: 1× Gaji Bulanan</h4>
+                    <p className="text-[10px] sm:text-xs text-stone-500">Bantalan pertama darurat dasar</p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <p className="text-sm sm:text-base font-black text-stone-900">{formatIDR(ef1x)}</p>
+                  {emergencyPocketBalance >= ef1x ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full mt-0.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Tercapai
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">
+                      {Math.min(100, Math.round((emergencyPocketBalance / ef1x) * 100))}% • Dalam Proses
+                    </span>
+                  )}
+                </div>
               </div>
-              <p className="text-lg font-black text-stone-900">{formatIDR(ef1x)}</p>
-              <div className="mt-3 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+
+              <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mt-3">
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all"
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.round((emergencyPocketBalance / ef1x) * 100))}%` }}
                 />
               </div>
             </div>
 
             {/* Level 2: 3x Gaji */}
-            <div className={`p-5 rounded-2xl border transition-all ${
+            <div className={`p-4 rounded-2xl border transition-all ${
               emergencyPocketBalance >= ef3x
-                ? 'bg-emerald-50/80 border-emerald-200'
-                : 'bg-stone-50 border-stone-200'
+                ? 'bg-emerald-50/70 border-emerald-300'
+                : 'bg-stone-50/80 border-stone-200'
             }`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-stone-700">Level 2: 3x Gaji</span>
-                {emergencyPocketBalance >= ef3x ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Tercapai
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                    emergencyPocketBalance >= ef3x ? 'bg-emerald-200 text-emerald-900' : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    2
                   </span>
-                ) : (
-                  <span className="text-[10px] text-stone-400 font-semibold">Dalam Proses</span>
-                )}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-stone-900">Level 2: 3× Gaji Bulanan</h4>
+                    <p className="text-[10px] sm:text-xs text-stone-500">Bantalan aman cadangan keluarga</p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <p className="text-sm sm:text-base font-black text-stone-900">{formatIDR(ef3x)}</p>
+                  {emergencyPocketBalance >= ef3x ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full mt-0.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Tercapai
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">
+                      {Math.min(100, Math.round((emergencyPocketBalance / ef3x) * 100))}% • Dalam Proses
+                    </span>
+                  )}
+                </div>
               </div>
-              <p className="text-lg font-black text-stone-900">{formatIDR(ef3x)}</p>
-              <div className="mt-3 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+
+              <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mt-3">
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all"
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.round((emergencyPocketBalance / ef3x) * 100))}%` }}
                 />
               </div>
             </div>
 
             {/* Level 3: 6x Gaji */}
-            <div className={`p-5 rounded-2xl border transition-all ${
+            <div className={`p-4 rounded-2xl border transition-all ${
               emergencyPocketBalance >= ef6x
-                ? 'bg-emerald-50/80 border-emerald-200'
-                : 'bg-stone-50 border-stone-200'
+                ? 'bg-emerald-50/70 border-emerald-300'
+                : 'bg-stone-50/80 border-stone-200'
             }`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-stone-700">Level 3: 6x Gaji (Aman Penuh)</span>
-                {emergencyPocketBalance >= ef6x ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Tercapai
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                    emergencyPocketBalance >= ef6x ? 'bg-emerald-200 text-emerald-900' : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    3
                   </span>
-                ) : (
-                  <span className="text-[10px] text-stone-400 font-semibold">Dalam Proses</span>
-                )}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-stone-900">Level 3: 6× Gaji Bulanan</h4>
+                    <p className="text-[10px] sm:text-xs text-stone-500">Aman penuh & kebebasan psikologis</p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <p className="text-sm sm:text-base font-black text-stone-900">{formatIDR(ef6x)}</p>
+                  {emergencyPocketBalance >= ef6x ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full mt-0.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Tercapai
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">
+                      {Math.min(100, Math.round((emergencyPocketBalance / ef6x) * 100))}% • Dalam Proses
+                    </span>
+                  )}
+                </div>
               </div>
-              <p className="text-lg font-black text-stone-900">{formatIDR(ef6x)}</p>
-              <div className="mt-3 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+
+              <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mt-3">
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all"
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.round((emergencyPocketBalance / ef6x) * 100))}%` }}
                 />
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -282,42 +328,74 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className={`p-5 rounded-2xl border ${
-            totalInvestmentValue >= 10000000 ? 'bg-amber-50/80 border-amber-300' : 'bg-stone-50 border-stone-200'
+        <div className="space-y-3">
+          <div className={`p-4 rounded-2xl border transition-all ${
+            totalInvestmentValue >= 10000000 ? 'bg-amber-50/70 border-amber-300' : 'bg-stone-50/80 border-stone-200'
           }`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold text-stone-700">Milestone Pertama: Rp 10 Juta</span>
-              {totalInvestmentValue >= 10000000 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
-                  Tercapai 🎉
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs shrink-0">
+                  🌱
                 </span>
-              )}
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-stone-900">Milestone Pertama: Rp 10 Juta</h4>
+                  <p className="text-[10px] sm:text-xs text-stone-500">Fondasi portofolio & emas awal</p>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <p className="text-sm sm:text-base font-black text-stone-900">Rp 10.000.000</p>
+                {totalInvestmentValue >= 10000000 ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-200 px-2 py-0.5 rounded-full mt-0.5">
+                    Tercapai 🎉
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">
+                    {Math.min(100, Math.round((totalInvestmentValue / 10000000) * 100))}% • {formatIDR(totalInvestmentValue)}
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="text-xl font-black text-stone-900">Rp 10.000.000</p>
-            <div className="mt-3 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+
+            <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mt-3">
               <div
-                className="bg-amber-500 h-full rounded-full"
+                className="bg-amber-500 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.round((totalInvestmentValue / 10000000) * 100))}%` }}
               />
             </div>
           </div>
 
-          <div className={`p-5 rounded-2xl border ${
-            totalInvestmentValue >= 50000000 ? 'bg-amber-50/80 border-amber-300' : 'bg-stone-50 border-stone-200'
+          <div className={`p-4 rounded-2xl border transition-all ${
+            totalInvestmentValue >= 50000000 ? 'bg-amber-50/70 border-amber-300' : 'bg-stone-50/80 border-stone-200'
           }`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold text-stone-700">Milestone Kedua: Rp 50 Juta</span>
-              {totalInvestmentValue >= 50000000 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
-                  Tercapai 🚀
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs shrink-0">
+                  🚀
                 </span>
-              )}
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-stone-900">Milestone Kedua: Rp 50 Juta</h4>
+                  <p className="text-[10px] sm:text-xs text-stone-500">Akselerasi aset & kemandirian</p>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <p className="text-sm sm:text-base font-black text-stone-900">Rp 50.000.000</p>
+                {totalInvestmentValue >= 50000000 ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-200 px-2 py-0.5 rounded-full mt-0.5">
+                    Tercapai 🚀
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">
+                    {Math.min(100, Math.round((totalInvestmentValue / 50000000) * 100))}% • {formatIDR(totalInvestmentValue)}
+                  </span>
+                )}
+              </div>
             </div>
-            <p className="text-xl font-black text-stone-900">Rp 50.000.000</p>
-            <div className="mt-3 w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+
+            <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden mt-3">
               <div
-                className="bg-amber-500 h-full rounded-full"
+                className="bg-amber-500 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.round((totalInvestmentValue / 50000000) * 100))}%` }}
               />
             </div>
@@ -362,7 +440,7 @@ export const AsetKekayaanSection: React.FC<AsetKekayaanSectionProps> = ({
 
         {assets.length === 0 ? (
           <p className="text-xs text-stone-400 py-6 text-center">
-            Belum ada aset fisik atau investasi yang dicatat. Klik "+ Tambah Aset" untuk mulai mencatat rumah, kendaraan, emas, atau reksadana Anda.
+            Belum ada aset fisik atau investasi yang dicatat. Klik tombol "Tambah Aset" untuk mulai mencatat rumah, kendaraan, emas, atau reksadana Anda.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
